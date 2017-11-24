@@ -1,6 +1,5 @@
 package cliente;
 
-
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.StringReader;
@@ -23,15 +22,14 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
-
 public class GestorPartidas {
 
 	// URI del recurso que permite acceder al juego
 	final private String baseURI = "http://localhost:8080/com.flota.ws/servicios/partidas/";
 	Client cliente = null;
-	// Para guardar el target que obtendrá con la operación nuevaPartida y que le permitirá jugar la partida creada
+	// Para guardar el target que obtendrá con la operación nuevaPartida y que
+	// le permitirá jugar la partida creada
 	private WebTarget targetPartida = null;
-
 
 	/**
 	 * 
@@ -39,87 +37,118 @@ public class GestorPartidas {
 	private static final long serialVersionUID = 1L;
 
 	/**
-	 * Constructor de la clase
-	 * Crea el cliente
+	 * Constructor de la clase Crea el cliente
 	 */
-	public GestorPartidas()  {
-        // POR IMPLEMENTAR
+	public GestorPartidas() {
+		cliente = ClientBuilder.newClient();
 	}
 
 	/**
 	 * Crea una nueva partida
-	 * @param	numFilas	numero de filas del tablero
-	 * @param	numColumnas	numero de columnas del tablero
-	 * @param	numBarcos	numero de barcos
+	 * 
+	 * @param numFilas
+	 *            numero de filas del tablero
+	 * @param numColumnas
+	 *            numero de columnas del tablero
+	 * @param numBarcos
+	 *            numero de barcos
 	 */
-	public void nuevaPartida(int numFilas, int numColumnas, int numBarcos)   {
+	public void nuevaPartida(int numFilas, int numColumnas, int numBarcos) {
 
-		Response response = cliente.target(baseURI).path("/8/8/6")
-				.request().post(Entity.xml(""));
+		Response response = cliente.target(baseURI).path("/8/8/6").request().post(Entity.xml(""));
 
-		if (response.getStatus() != 201) throw new RuntimeException("Fallo al crear partida");
-		// Obtiene la informació sobre el URI del nuevo recurso partida de la cabecera 'Location' en la respuesta
+		if (response.getStatus() != 201)
+			throw new RuntimeException("Fallo al crear partida");
+		// Obtiene la informació sobre el URI del nuevo recurso partida de la
+		// cabecera 'Location' en la respuesta
 		String recursoPartida = response.getLocation().toString();
 		this.targetPartida = cliente.target(recursoPartida);
 		response.close();
-
 		System.out.println("Instancio una nueva partida con id: " + recursoPartida);
 	}
 
 	/**
 	 * Crea la partida en juego
 	 */
-	public void borraPartida()   {		
-        // POR IMPLEMENTAR
+	public void borraPartida() {
+		Response response = cliente.target(baseURI).path(getIdPartida()).request().delete();
+
+		if (response.getStatus() == 404)
+			throw new NotFoundException("Contacto a borrar no encontrado");
+		response.close();
+		System.out.println("Partida borrada con éxito.");
 	}
-
-
 
 	/**
 	 * Prueba una casilla y devuelve el resultado
-	 * @param	fila	fila de la casilla
-	 * @param	columna	columna de la casilla
-	 * @return			resultado de la prueba: AGUA, TOCADO, ya HUNDIDO, recien HUNDIDO
+	 * 
+	 * @param fila
+	 *            fila de la casilla
+	 * @param columna
+	 *            columna de la casilla
+	 * @return resultado de la prueba: AGUA, TOCADO, ya HUNDIDO, recien HUNDIDO
 	 */
-	public int pruebaCasilla( int fila, int columna)   {
-        // POR IMPLEMENTAR
-		return 0; // A MODIFICAR
+	public int pruebaCasilla(int fila, int columna) {
+		Response response = cliente.target(baseURI).path(getIdPartida()+"/casilla/" + fila + "," + columna).queryParam("fila", fila)
+				.queryParam("columna", columna).request().put(Entity.text(""));
+
+		if (response.getStatus() == 404) { // 404 = NOT_FOUND
+			response.close();
+			throw new NotFoundException("Partida no encontrada");
+		} else {
+			int resultadoCasilla = response.readEntity(Integer.class);
+			response.close();
+			return resultadoCasilla;
+
+		}
 	}
 
 	/**
 	 * Obtiene los datos de un barco.
-	 * @param	idBarco	identificador del barco
-	 * @return			cadena con informacion sobre el barco "fila#columna#orientacion#tamanyo"
+	 * 
+	 * @param idBarco
+	 *            identificador del barco
+	 * @return cadena con informacion sobre el barco
+	 *         "fila#columna#orientacion#tamanyo"
 	 */
-	public String getBarco( int idBarco)   {
-        // POR IMPLEMENTAR
-		return null; // A MODIFICAR
-	}
+	public String getBarco(int idBarco) {
+		Response response = cliente.target(baseURI).path(getIdPartida() + "/barco/" + idBarco)
+				.request(MediaType.TEXT_PLAIN).get();
 
+		if (response.getStatus() == 404) { // 404 = NOT_FOUND
+			response.close();
+			throw new NotFoundException("Partida no encontrada");
+		} else {
+			String barco = response.readEntity(String.class);
+			response.close();
+			return barco;
+
+		}
+	}
 
 	/**
 	 * Devuelve la informacion sobre todos los barcos
-	 * @return			vector de cadenas con la informacion de cada barco
+	 * 
+	 * @return vector de cadenas con la informacion de cada barco
 	 */
 	protected String[] getSolucion() {
-		String cadena = targetPartida.path("/solucion")
-				.request().get(String.class);
+		String cadena = cliente.target(baseURI).path(getIdPartida()+"/solucion").request().get(String.class);
 		try {
 			DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
 			Document doc = builder.parse(new InputSource(new StringReader(cadena)));
 			return XMLASolucion(doc);
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			throw new WebApplicationException(e, Response.Status.BAD_REQUEST);
 		}
 	}
-	
+
 	/**
 	 * Procesa un Document XML y lo convierte en la solucion de la partida
-	 * @return			vector de cadenas con la informacion de cada barco
+	 * 
+	 * @return vector de cadenas con la informacion de cada barco
 	 */
 	protected String[] XMLASolucion(Document doc) {
-		int numBarcos=0;
+		int numBarcos = 0;
 		Element root = doc.getDocumentElement();
 		if (root.getAttribute("tam") != null && !root.getAttribute("tam").trim().equals(""))
 			numBarcos = Integer.valueOf(root.getAttribute("tam"));
@@ -129,11 +158,15 @@ public class GestorPartidas {
 			Element element = (Element) nodes.item(i);
 			if (element.getTagName().equals("barco")) {
 				solucion[i] = element.getTextContent();
-			}
-			else System.out.println("[getSolucion: ] Error en el nombre de la etiqueta");
+			} else
+				System.out.println("[getSolucion: ] Error en el nombre de la etiqueta");
 		}
 		return solucion;
 	}
-
+	
+	public String getIdPartida(){
+		String[] path = targetPartida.getUri().getPath().split("/");
+		return path[path.length-1];
+	}
 
 } // fin clase
