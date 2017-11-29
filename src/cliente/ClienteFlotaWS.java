@@ -94,7 +94,7 @@ public class ClienteFlotaWS {
 		GuiTablero(int numFilas, int numColumnas) {
 			this.numFilas = numFilas;
 			this.numColumnas = numColumnas;
-			frame = new JFrame();
+			frame = new JFrame("Flotar la hundida");
 			frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 			frame.addWindowListener(new WindowAdapter() {
 				public void windowClosing(WindowEvent e) {
