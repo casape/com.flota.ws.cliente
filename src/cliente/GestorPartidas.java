@@ -71,7 +71,7 @@ public class GestorPartidas {
 	 * Crea la partida en juego
 	 */
 	public void borraPartida() {
-		Response response = cliente.target(baseURI).path(getIdPartida()).request().delete();
+		Response response = targetPartida.request().delete();
 
 		if (response.getStatus() == 404)
 			throw new NotFoundException("Contacto a borrar no encontrado");
@@ -89,7 +89,7 @@ public class GestorPartidas {
 	 * @return resultado de la prueba: AGUA, TOCADO, ya HUNDIDO, recien HUNDIDO
 	 */
 	public int pruebaCasilla(int fila, int columna) {
-		Response response = cliente.target(baseURI).path(getIdPartida()+"/casilla/" + fila + "," + columna).queryParam("fila", fila)
+		Response response = targetPartida.path("/casilla/" + fila + "," + columna).queryParam("fila", fila)
 				.queryParam("columna", columna).request().put(Entity.text(""));
 
 		if (response.getStatus() == 404) { // 404 = NOT_FOUND
@@ -112,7 +112,7 @@ public class GestorPartidas {
 	 *         "fila#columna#orientacion#tamanyo"
 	 */
 	public String getBarco(int idBarco) {
-		Response response = cliente.target(baseURI).path(getIdPartida() + "/barco/" + idBarco)
+		Response response =targetPartida.path("/barco/" + idBarco)
 				.request(MediaType.TEXT_PLAIN).get();
 
 		if (response.getStatus() == 404) { // 404 = NOT_FOUND
@@ -132,7 +132,7 @@ public class GestorPartidas {
 	 * @return vector de cadenas con la informacion de cada barco
 	 */
 	protected String[] getSolucion() {
-		String cadena = cliente.target(baseURI).path(getIdPartida()+"/solucion").request().get(String.class);
+		String cadena = targetPartida.path("/solucion").request().get(String.class);
 		try {
 			DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
 			Document doc = builder.parse(new InputSource(new StringReader(cadena)));
@@ -162,11 +162,6 @@ public class GestorPartidas {
 				System.out.println("[getSolucion: ] Error en el nombre de la etiqueta");
 		}
 		return solucion;
-	}
-	
-	public String getIdPartida(){
-		String[] path = targetPartida.getUri().getPath().split("/");
-		return path[path.length-1];
 	}
 
 } // fin clase
