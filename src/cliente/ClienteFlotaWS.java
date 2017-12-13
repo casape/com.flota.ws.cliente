@@ -66,7 +66,7 @@ public class ClienteFlotaWS {
 
 	private void salir() {
 		try {
-//			partida.fin();
+			partida.borraPartida();
 			guiTablero.liberaRecursos();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -325,6 +325,7 @@ public class ClienteFlotaWS {
 			if (texto.equals("Mostrar Solucion")) {
 				guiTablero.muestraSolucion();
 			} else if (texto.equals("Nueva Partida")) {
+				partida.borraPartida();
 				partida.nuevaPartida(NUMFILAS, NUMCOLUMNAS, NUMBARCOS);
 				// Resetea el juego a partir de aqui
 				guiTablero.limpiaTablero();
