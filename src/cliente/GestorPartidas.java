@@ -55,7 +55,8 @@ public class GestorPartidas {
 	 */
 	public void nuevaPartida(int numFilas, int numColumnas, int numBarcos) {
 
-		Response response = cliente.target(baseURI).path("/8/8/6").request().post(Entity.xml(""));
+		Response response = cliente.target(baseURI).path("/" + numFilas + "/" + numColumnas + "/" + numBarcos).request()
+				.post(Entity.xml(""));
 
 		if (response.getStatus() != 201)
 			throw new RuntimeException("Fallo al crear partida");
@@ -74,7 +75,7 @@ public class GestorPartidas {
 		Response response = targetPartida.request().delete();
 
 		if (response.getStatus() == 404)
-			throw new NotFoundException("Contacto a borrar no encontrado");
+			throw new NotFoundException("Partida no encontrada");
 		response.close();
 		System.out.println("Partida borrada con éxito.");
 	}
@@ -99,7 +100,6 @@ public class GestorPartidas {
 			int resultadoCasilla = response.readEntity(Integer.class);
 			response.close();
 			return resultadoCasilla;
-
 		}
 	}
 
@@ -112,8 +112,7 @@ public class GestorPartidas {
 	 *         "fila#columna#orientacion#tamanyo"
 	 */
 	public String getBarco(int idBarco) {
-		Response response =targetPartida.path("/barco/" + idBarco)
-				.request(MediaType.TEXT_PLAIN).get();
+		Response response = targetPartida.path("/barco/" + idBarco).request(MediaType.TEXT_PLAIN).get();
 
 		if (response.getStatus() == 404) { // 404 = NOT_FOUND
 			response.close();
@@ -122,7 +121,6 @@ public class GestorPartidas {
 			String barco = response.readEntity(String.class);
 			response.close();
 			return barco;
-
 		}
 	}
 
