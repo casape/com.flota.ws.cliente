@@ -69,7 +69,7 @@ public class GestorPartidas {
 	}
 
 	/**
-	 * Crea la partida en juego
+	 * Borra la partida en juego
 	 */
 	public void borraPartida() {
 		Response response = targetPartida.request().delete();
@@ -90,8 +90,7 @@ public class GestorPartidas {
 	 * @return resultado de la prueba: AGUA, TOCADO, ya HUNDIDO, recien HUNDIDO
 	 */
 	public int pruebaCasilla(int fila, int columna) {
-		Response response = targetPartida.path("/casilla/" + fila + "," + columna).queryParam("fila", fila)
-				.queryParam("columna", columna).request().put(Entity.text(""));
+		Response response = targetPartida.path("/casilla/" + fila + "," + columna).request().put(Entity.text(""));
 
 		if (response.getStatus() == 404) { // 404 = NOT_FOUND
 			response.close();
